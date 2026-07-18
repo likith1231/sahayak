@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  FARMER
+  CONSUMER
+  NGO
+  ADMIN
+}
+
+enum ListingStatus {
+  AVAILABLE
+  SOLD_OUT
+  REMOVED
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+enum RequestStatus {
+  OPEN
+  CLAIMED
+  FULFILLED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  phone         String   @unique
+  email         String?  @unique
+  passwordHash  String
+  role          Role
+  createdAt     DateTime @default(now())
+
+  listings          Listing[]
+  orders            Order[]
+  emergencyRequests EmergencyRequest[]
+  ngoProfile        NGO?
+}
+
+model Listing {
+  id          String        @id @default(uuid())
+  farmer      User          @relation(fields: [farmerId], references: [id])
+  farmerId    String
+  cropName    String
+  quantity    Float
+  unit        String
+  price       Float
+  harvestDate DateTime
+  photoUrl    String?
+  status      ListingStatus @default(AVAILABLE)
+  createdAt   DateTime      @default(now())
+
+  orders Order[]
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  consumer   User        @relation(fields: [consumerId], references: [id])
+  consumerId String
+  listing    Listing     @relation(fields: [listingId], references: [id])
+  listingId  String
+  quantity   Float
+  totalPrice Float
+  status     OrderStatus @default(PLACED)
+  createdAt  DateTime    @default(now())
+}
+
+model EmergencyRequest {
+  id         String         @id @default(uuid())
+  consumer   User           @relation(fields: [consumerId], references: [id])
+  consumerId String
+  latitude   Float
+  longitude  Float
+  needType   String
+  status     RequestStatus  @default(OPEN)
+  createdAt  DateTime       @default(now())
+}
+
+model NGO {
+  id                 String   @id @default(uuid())
+  user               User     @relation(fields: [userId], references: [id])
+  userId             String   @unique
+  organizationName   String
+  verificationStatus Boolean  @default(false)
+  documentUrl        String?
+  createdAt          DateTime @default(now())
+}

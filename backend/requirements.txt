@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+python-jose[cryptography]
+passlib==1.7.4
+bcrypt==4.0.1
+psycopg2-binary
+python-dotenv
+httpx
+google-genai
