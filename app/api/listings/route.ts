@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Only farmers can create listings" }, { status: 403 });
         }
 
-        const { cropName, quantity, unit, price, harvestDate, photoUrl } = await req.json();
+        const { cropName, quantity, unit, price, harvestDate } = await req.json();
 
         if (!cropName || !quantity || !unit || !price || !harvestDate) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
                 unit,
                 price,
                 harvestDate: new Date(harvestDate),
-                photoUrl,
             },
         });
 

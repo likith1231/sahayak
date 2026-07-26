@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../lib/api";
 
@@ -42,41 +43,84 @@ export default function Register() {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>Register</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", maxWidth: "300px", gap: "1rem" }}>
-        <div>
-          <label>Name:</label>
-          <br />
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-charcoal mb-2">Create your account</h1>
+          <p className="text-muted text-sm">Join the Sahayak marketplace</p>
         </div>
-        <div>
-          <label>Phone:</label>
-          <br />
-          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+
+        <div className="glass-card-strong rounded-xl shadow-sm p-8">
+          {error && (
+            <div className="bg-error/10 border border-error/20 text-error text-sm rounded-lg px-4 py-3 mb-6">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label>Full Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your full name"
+                required
+              />
+            </div>
+            <div>
+              <label>Phone</label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. 9876543210"
+                required
+              />
+            </div>
+            <div>
+              <label>Email <span className="text-muted font-normal">(optional)</span></label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
+            <div>
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Choose a strong password"
+                required
+              />
+            </div>
+            <div>
+              <label>I am a</label>
+              <select value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="FARMER">Farmer</option>
+                <option value="CONSUMER">Consumer</option>
+                <option value="NGO">NGO</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-light transition-colors"
+            >
+              Create Account
+            </button>
+          </form>
         </div>
-        <div>
-          <label>Email (optional):</label>
-          <br />
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div>
-          <label>Password:</label>
-          <br />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
-        <div>
-          <label>Role:</label>
-          <br />
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="FARMER">Farmer</option>
-            <option value="CONSUMER">Consumer</option>
-            <option value="NGO">NGO</option>
-          </select>
-        </div>
-        <button type="submit">Register</button>
-      </form>
+
+        <p className="text-center text-sm text-muted mt-6">
+          Already have an account?{" "}
+          <Link href="/login" className="text-primary font-medium hover:text-primary-light">
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

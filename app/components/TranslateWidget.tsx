@@ -34,23 +34,37 @@ export default function TranslateWidget({ text }: { text: string }) {
   };
 
   return (
-    <div style={{ margin: "0.5rem 0", padding: "0.5rem", border: "1px dashed #ccc", display: "inline-block" }}>
-      <p style={{ margin: "0 0 0.5rem 0" }}>{text}</p>
+    <div className="mt-1.5 mb-2">
+      <p className="text-base font-medium text-charcoal mb-2">{text}</p>
       
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <select value={lang} onChange={(e) => setLang(e.target.value)} disabled={loading}>
+      <div className="flex items-center gap-2">
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value)}
+          disabled={loading}
+          className="!w-auto text-xs !py-1.5 !px-2"
+        >
+          <option value="en">English</option>
           <option value="hi">Hindi</option>
           <option value="kn">Kannada</option>
           <option value="ta">Tamil</option>
           <option value="te">Telugu</option>
         </select>
-        <button onClick={handleTranslate} disabled={loading}>
+        <button
+          onClick={handleTranslate}
+          disabled={loading}
+          className="bg-accent/15 text-accent text-xs font-medium px-3 py-1.5 rounded-md hover:bg-accent/25 transition-colors"
+        >
           {loading ? "Translating..." : "Translate"}
         </button>
       </div>
 
-      {error && <p style={{ color: "red", margin: "0.5rem 0 0 0", fontSize: "0.9em" }}>{error}</p>}
-      {translated && <p style={{ color: "green", margin: "0.5rem 0 0 0" }}>{translated}</p>}
+      {error && <p className="text-xs text-error mt-1.5">{error}</p>}
+      {translated && (
+        <p className="text-sm text-primary mt-2 bg-primary/5 rounded-md px-3 py-2 border border-primary/10">
+          {translated}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,26 +1,226 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Sahayak Design System */
+  --color-primary: #2D6A4F;
+  --color-primary-light: #40916C;
+  --color-primary-dark: #1B4332;
+  --color-accent: #D4A373;
+  --color-accent-light: #E9C99E;
+  --color-cream: #FEFAE0;
+  --color-charcoal: #2B2D42;
+  --color-muted: #4B5563;
+  --color-border: #E5E7EB;
+  --color-surface: #FFFFFF;
+  --color-error: #DC2626;
+  --color-success: #16A34A;
+  --color-emergency: #B91C1C;
+  --color-chat-user: #EDF6F0;
+  --color-chat-agent: #F3F4F6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: transparent;
+  --foreground: #2B2D42;
+}
+
+/* Light-themed app — cream background regardless of OS color scheme */
+html {
+  background: #FEFAE0;
 }
 
 body {
-  background: var(--background);
+  background: transparent;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Base element resets ─── */
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-charcoal);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  a:hover {
+    color: var(--color-primary-light);
+  }
+  
+  /* ─── Form elements ─── */
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="url"],
+  input[type="date"],
+  input[type="tel"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    color: var(--color-charcoal);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
+  
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+  }
+  
+  input::placeholder,
+  textarea::placeholder {
+    color: #9CA3AF;
+  }
+  
+  label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-charcoal);
+    margin-bottom: 0.375rem;
+    letter-spacing: 0.01em;
+  }
+  
+  /* ─── Button base ─── */
+  
+  button {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.15s ease;
+    border: none;
+    line-height: 1.5;
+  }
+  
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  
+}
+/* ─── Scrollbar ─── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* ─── Hero Animations ─── */
+
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(3deg); }
+}
+
+@keyframes hero-float-reverse {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(10px) rotate(-3deg); }
+}
+
+@keyframes hero-blob {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  33% { transform: scale(1.05) translate(10px, -10px); }
+  66% { transform: scale(0.95) translate(-5px, 8px); }
+}
+
+@keyframes hero-pulse-soft {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.22; }
+}
+
+.hero-float-1 { animation: hero-float 6s ease-in-out infinite; }
+.hero-float-2 { animation: hero-float-reverse 7s ease-in-out infinite 0.5s; }
+.hero-float-3 { animation: hero-float 8s ease-in-out infinite 1s; }
+.hero-float-4 { animation: hero-float-reverse 5.5s ease-in-out infinite 1.5s; }
+.hero-float-5 { animation: hero-float 9s ease-in-out infinite 0.8s; }
+.hero-blob { animation: hero-blob 12s ease-in-out infinite; }
+.hero-pulse { animation: hero-pulse-soft 4s ease-in-out infinite; }
+
+/* ─── Chat Widget ─── */
+
+@keyframes chat-bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes chat-slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-bubble-hover:hover {
+  animation: chat-bounce 0.4s ease-in-out;
+}
+
+.chat-panel-enter {
+  animation: chat-slide-up 0.25s ease-out forwards;
+}
+
+/* ─── Glass Card Utility ─── */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+  box-shadow: 0 4px 24px -4px rgba(43, 45, 66, 0.04), 0 2px 8px -2px rgba(43, 45, 66, 0.02);
+}
+
+.glass-card-strong {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: 0 8px 32px -4px rgba(43, 45, 66, 0.06), 0 4px 12px -2px rgba(43, 45, 66, 0.03);
+}
+
+/* ─── Shimmer Animation ─── */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-accent {
+  background: linear-gradient(
+    90deg,
+    transparent 30%,
+    rgba(255,255,255,0.08) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 8s ease-in-out infinite;
 }

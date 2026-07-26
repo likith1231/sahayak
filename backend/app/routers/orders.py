@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import Order, Listing, ListingStatus
 from app.schemas import OrderCreateReq
-from app.auth.dependencies import get_current_consumer, get_current_user
+from app.auth.dependencies import get_current_consumer, get_current_user, get_current_farmer
 
 router = APIRouter()
 
@@ -88,3 +88,36 @@ def get_orders(db: Session = Depends(get_db), payload: dict = Depends(get_curren
     except Exception as e:
         print(e)
         return JSONResponse(status_code=500, content={"error": "Failed to fetch orders"})
+
+@router.get("/api/orders/farmer")
+def get_farmer_orders(db: Session = Depends(get_db), payload: dict = Depends(get_current_farmer)):
+    try:
+        orders = db.query(Order).options(
+            joinedload(Order.listing).joinedload(Listing.farmer),
+            joinedload(Order.consumer)
+        ).join(Listing).filter(Listing.farmerId == payload["userId"]).order_by(Order.createdAt.desc()).all()
+        
+        result = []
+        for o in orders:
+            result.append({
+                "id": o.id,
+                "consumerId": o.consumerId,
+                "listingId": o.listingId,
+                "quantity": o.quantity,
+                "totalPrice": o.totalPrice,
+                "status": o.status.value,
+                "createdAt": o.createdAt.isoformat(),
+                "consumer": {
+                    "name": o.consumer.name,
+                    "phone": o.consumer.phone
+                } if o.consumer else None,
+                "listing": {
+                    "cropName": o.listing.cropName,
+                    "unit": o.listing.unit,
+                    "price": o.listing.price
+                }
+            })
+        return {"orders": result}
+    except Exception as e:
+        print(e)
+        return JSONResponse(status_code=500, content={"error": "Failed to fetch farmer orders"})

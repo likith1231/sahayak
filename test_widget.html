@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<button id="pay">Pay</button>
+<script>
+document.getElementById('pay').onclick = function(){
+    var options = {
+        "key": "rzp_test_1DP5mmOlF5G5ag", // test key
+        "amount": "1000",
+        "currency": "INR",
+        "name": "Acme Corp",
+        "description": "Test Transaction",
+        "handler": function (response){
+            alert(response.razorpay_payment_id);
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+};
+</script>
+</body>
+</html>

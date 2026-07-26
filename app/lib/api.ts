@@ -12,6 +12,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   }
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
+    cache: 'no-store',
     ...options,
     headers,
   });
@@ -30,3 +31,6 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
   return response.json();
 }
+
+export const getMandis = () => apiFetch('/api/mandis');
+export const getMandi = (id: string) => apiFetch(`/api/mandis/${id}`);
