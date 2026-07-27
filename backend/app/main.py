@@ -79,3 +79,7 @@ app.include_router(mandis.router)
 @app.get("/")
 def read_root():
     return {"message": "Sahayak FastAPI Backend"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
