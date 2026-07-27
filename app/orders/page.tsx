@@ -7,11 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import ConsumerOrderList from "../components/ConsumerOrderList";
 
 export default function MyOrdersPage() {
-  const { user, loading: authLoading } = useAuth();
-
-  if (authLoading) {
-    return <div className="p-8 text-center text-muted">Loading...</div>;
-  }
+  const { user } = useAuth();
 
   if (!user || user.role !== "CONSUMER") {
     return (
