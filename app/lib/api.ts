@@ -11,11 +11,17 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    cache: 'no-store',
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}${endpoint}`, {
+      cache: 'no-store',
+      ...options,
+      headers,
+    });
+  } catch {
+    // Network-level failure (server asleep/unreachable, or a CORS-blocked response)
+    throw new Error("Couldn't reach the server. It may be waking up — please try again in a few seconds.");
+  }
 
   if (!response.ok) {
     const errorBody = await response.text();
