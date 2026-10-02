@@ -116,7 +116,20 @@ Applied consistently across all pages so cards appear translucent against the 3D
 - **AI Agent → Floating Chat Widget**: The AI chat lives in `app/components/ChatWidget.tsx` (Intercom/Crisp pattern) — a fixed bottom-right floating bubble that expands into a 360×500 chat panel. It is NOT a nav link or standalone page. `/agent` redirects to `/`.
 - **Listings + Create Listing merged**: There is a single `/listings` page. For FARMER users, a "+ New Listing" button toggles an inline create form with collapsible "Additional details" for optional fields. `/listings/new` redirects to `/listings`.
 - **Category filtering**: The listings page reads `?category=` from the URL and passes it to the API. Category filter pills are shown at the top. The dashboard's `CategoryBrowse` tiles link to `/listings?category=X`.
-- **Cart + Checkout flow**: `/cart` shows items with thumbnails, quantities, and remove controls. `/checkout` has a 3-step flow: order summary → payment (Razorpay or mock) → confirmation screen with farmer contact info for pickup coordination. **No delivery language** — users pick up from the farmer directly.
+- **Cart + Checkout flow**: `/cart` shows items with thumbnails, quantities, remove controls and a free-delivery progress nudge. `/checkout` lets the consumer choose **Home Delivery** or **Pickup** (distribution center), then address → delivery slot → summary → payment (Razorpay or cash on delivery/pickup) → confirmation with tracking numbers.
+
+### Delivery & Order Tracking (October 2026)
+
+- **Fulfillment model**: each `Order` has `fulfillmentType` (`DELIVERY`/`PICKUP`) and `fulfillmentStatus`, separate from the payment `status`. Flows (defined in `backend/app/services/delivery.py`):
+  - Delivery: `PLACED → CONFIRMED → PACKED → IN_TRANSIT → OUT_FOR_DELIVERY → DELIVERED`
+  - Pickup: `PLACED → CONFIRMED → PACKED → READY_FOR_PICKUP → DELIVERED` (shown as "Picked up")
+  - `CANCELLED` is terminal. Consumers can cancel up to `PACKED`; farmers can reject up to `CONFIRMED`. Cancelling restocks the listing and refunds paid orders via Razorpay when configured.
+- **Timeline**: every transition writes an `OrderTrackingEvent`; the API returns computed `steps` + `events` for the tracker UI.
+- **Handover OTP**: each order has a 4-digit `deliveryOtp` shown only to the consumer; the farmer must enter it to mark `DELIVERED`. Cash orders flip to `PAID` on delivery.
+- **Slots & fees**: 3 daily slots (8–12, 12–4, 4–8 IST), 6h lead time, 5 days ahead (+1 day outside 560xxx). Delivery only to Karnataka pincodes (56–59xxxx). ₹40 fee, free at ₹500+, charged once per checkout on the first order.
+- **Saved addresses**: `Address` model + `/api/addresses` CRUD; managed in Profile → Saved Addresses and inline at checkout.
+- **Pages**: `/orders` (filters, search, ETA + progress), `/orders/[id]` (live tracker polling every 20s, OTP, partner info, history, cancel, rate, reorder, printable invoice), `/farmer/orders` (stats + "Mark as next step" actions). Navbar has a `NotificationBell` for status updates.
+- **Migration**: `a7d3c9e1f2b4` adds the columns/tables idempotently and backfills legacy orders as pickup.
 - **Cart badge**: Navbar shows a cart icon with item count badge for CONSUMER users. Updates via `cart-updated` custom DOM event.
 - **Hero animations**: CSS `@keyframes` in `globals.css` — `hero-float-*` for floating produce icons, `hero-blob` for gradient blobs, `hero-pulse` for subtle opacity animation (retained alongside 3D).
 

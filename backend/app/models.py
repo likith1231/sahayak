@@ -1,7 +1,7 @@
 import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, String, Float, Boolean, DateTime, Integer, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
 from app.database import Base
@@ -29,7 +29,26 @@ class OrderStatus(str, enum.Enum):
 class PaymentMethod(str, enum.Enum):
     UPI = "UPI"
     CARD = "CARD"
+    # Cash paid at handover — used for both pickup and home delivery orders
     CASH_ON_PICKUP = "CASH_ON_PICKUP"
+
+class FulfillmentType(str, enum.Enum):
+    DELIVERY = "DELIVERY"
+    PICKUP = "PICKUP"
+
+class FulfillmentStatus(str, enum.Enum):
+    # Shared
+    PLACED = "PLACED"
+    CONFIRMED = "CONFIRMED"
+    PACKED = "PACKED"
+    # Delivery only
+    IN_TRANSIT = "IN_TRANSIT"
+    OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY"
+    # Pickup only
+    READY_FOR_PICKUP = "READY_FOR_PICKUP"
+    # Terminal
+    DELIVERED = "DELIVERED"
+    CANCELLED = "CANCELLED"
 
 class RequestStatus(str, enum.Enum):
     OPEN = "OPEN"
@@ -77,6 +96,7 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user")
     assignedMandi = relationship("DistributionCenter", foreign_keys=[assignedMandiId])
     savedMandis = relationship("SavedMandi", back_populates="user", cascade="all, delete")
+    addresses = relationship("Address", back_populates="user", cascade="all, delete")
 
 class SavedMandi(Base):
     __tablename__ = "SavedMandi"
@@ -140,9 +160,67 @@ class Order(Base):
     razorpaySignature = Column(String, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
 
+    # Fulfillment & tracking (stored as VARCHAR so new stages don't need ALTER TYPE)
+    fulfillmentType = Column(SQLEnum(FulfillmentType, native_enum=False, length=20), default=FulfillmentType.PICKUP)
+    fulfillmentStatus = Column(SQLEnum(FulfillmentStatus, native_enum=False, length=32), default=FulfillmentStatus.PLACED)
+    trackingNumber = Column(String, unique=True, nullable=True)
+    checkoutGroupId = Column(String, nullable=True, index=True)
+    deliveryName = Column(String, nullable=True)
+    deliveryPhone = Column(String, nullable=True)
+    deliveryAddress = Column(String, nullable=True)
+    deliveryCity = Column(String, nullable=True)
+    deliveryPincode = Column(String, nullable=True)
+    deliveryInstructions = Column(String, nullable=True)
+    deliveryDate = Column(DateTime, nullable=True)
+    deliverySlot = Column(String, nullable=True)
+    estimatedDeliveryAt = Column(DateTime, nullable=True)
+    deliveryFee = Column(Float, default=0.0)
+    deliveryOtp = Column(String, nullable=True)
+    deliveryPartnerName = Column(String, nullable=True)
+    deliveryPartnerPhone = Column(String, nullable=True)
+    deliveredAt = Column(DateTime, nullable=True)
+    cancelledAt = Column(DateTime, nullable=True)
+    cancelReason = Column(String, nullable=True)
+    refundStatus = Column(String, nullable=True)
+    rating = Column(Integer, nullable=True)
+    review = Column(String, nullable=True)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     consumer = relationship("User", back_populates="orders")
     listing = relationship("Listing", back_populates="orders")
     pickupCenter = relationship("DistributionCenter", back_populates="orders")
+    trackingEvents = relationship("OrderTrackingEvent", back_populates="order", cascade="all, delete", order_by="OrderTrackingEvent.createdAt")
+
+class OrderTrackingEvent(Base):
+    __tablename__ = "OrderTrackingEvent"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    orderId = Column(String, ForeignKey("Order.id"), nullable=False, index=True)
+    status = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+
+    order = relationship("Order", back_populates="trackingEvents")
+
+class Address(Base):
+    __tablename__ = "Address"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    userId = Column(String, ForeignKey("User.id"), nullable=False, index=True)
+    label = Column(String, nullable=False, default="Home")
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    line1 = Column(String, nullable=False)
+    line2 = Column(String, nullable=True)
+    landmark = Column(String, nullable=True)
+    city = Column(String, nullable=False)
+    pincode = Column(String, nullable=False)
+    isDefault = Column(Boolean, default=False)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="addresses")
 
 class EmergencyRequest(Base):
     __tablename__ = "EmergencyRequest"

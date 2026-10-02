@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../lib/api";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -60,6 +61,11 @@ export default function Navbar() {
           <Link href="/emergency" className="text-muted hover:text-primary transition-colors">
             Emergency
           </Link>
+          {user?.role === "CONSUMER" && (
+            <Link href="/orders" className="text-muted hover:text-primary transition-colors">
+              My Orders
+            </Link>
+          )}
           {user?.role === "FARMER" && (
             <>
               <Link href="/farmer/listings" className="text-muted hover:text-primary transition-colors">
@@ -79,6 +85,7 @@ export default function Navbar() {
 
         {/* Auth section + Cart */}
         <div className="hidden md:flex items-center gap-3">
+          {user && <NotificationBell role={user.role} />}
           {/* Cart icon for consumers */}
           {user?.role === "CONSUMER" && (
             <Link href="/cart" className="relative text-muted hover:text-primary transition-colors p-2">
@@ -134,6 +141,7 @@ export default function Navbar() {
 
         {/* Mobile hamburger */}
         <div className="flex items-center gap-2 md:hidden">
+          {user && <NotificationBell role={user.role} />}
           {/* Mobile cart icon */}
           {user?.role === "CONSUMER" && (
             <Link href="/cart" className="relative text-muted hover:text-primary transition-colors p-2">
@@ -184,6 +192,11 @@ export default function Navbar() {
           <Link href="/emergency" onClick={() => setMobileOpen(false)} className="block text-sm font-medium text-muted hover:text-primary">
             Emergency
           </Link>
+          {user?.role === "CONSUMER" && (
+            <Link href="/orders" onClick={() => setMobileOpen(false)} className="block text-sm font-medium text-muted hover:text-primary">
+              My Orders
+            </Link>
+          )}
           {user?.role === "FARMER" && (
             <>
               <Link href="/farmer/listings" onClick={() => setMobileOpen(false)} className="block text-sm font-medium text-muted hover:text-primary">

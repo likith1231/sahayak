@@ -22,11 +22,16 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     let errorMessage = errorBody;
     try {
       const parsed = JSON.parse(errorBody);
-      errorMessage = parsed.detail || errorBody;
+      errorMessage = parsed.error || parsed.detail || errorBody;
     } catch (e) {
       // Ignore
     }
     throw new Error(errorMessage);
+  }
+
+  // 204 No Content (e.g. DELETE endpoints) has no body to parse
+  if (response.status === 204) {
+    return null;
   }
 
   return response.json();

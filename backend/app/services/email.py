@@ -13,17 +13,28 @@ def send_order_confirmation(to_email: str, order_details: dict):
         <h1>Order Confirmation</h1>
         <p>Thank you for your order on Sahayak!</p>
         <p><strong>Total Amount:</strong> ₹{order_details.get('total_amount', 0)}</p>
-        <h3>Pickup Details:</h3>
-        <ul>
         """
-        
-        for dc in order_details.get('pickup_details', []):
-            html_content += f"<li><strong>{dc['dc']['name']}</strong>: {dc['dc']['address']}</li>"
-            
-        html_content += """
-        </ul>
-        <p>Please present your order ID at the pickup location.</p>
-        """
+
+        tracking = order_details.get('tracking_numbers') or []
+        if tracking:
+            html_content += f"<p><strong>Tracking number(s):</strong> {', '.join(tracking)}</p>"
+
+        delivery = order_details.get('delivery')
+        if delivery:
+            html_content += f"""
+            <h3>Home Delivery</h3>
+            <p>{delivery.get('name')}<br/>{delivery.get('address')}<br/>{delivery.get('city')} - {delivery.get('pincode')}</p>
+            <p><strong>Delivery slot:</strong> {delivery.get('date')}, {delivery.get('slot')}</p>
+            <p>Track your order live from <em>My Orders</em> on Sahayak.</p>
+            """
+        elif order_details.get('pickup_details'):
+            html_content += "<h3>Pickup Details:</h3><ul>"
+            for dc in order_details.get('pickup_details', []):
+                html_content += f"<li><strong>{dc['dc']['name']}</strong>: {dc['dc']['address']}</li>"
+            html_content += """
+            </ul>
+            <p>Please present your order ID at the pickup location.</p>
+            """
 
         params = {
             "from": "Sahayak <onboarding@resend.dev>",

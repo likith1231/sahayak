@@ -1,49 +1,64 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
 import { getCropImage } from "../lib/cropImages";
+import { OrderData, etaHeadline, isActive, progressPercent, statusBadgeClass, formatDate } from "../lib/orders";
 
-interface Order {
-  id: string;
-  consumerId: string;
-  listingId: string;
-  quantity: number;
-  totalPrice: number;
-  status: string;
-  createdAt: string;
-  listing: {
-    cropName: string;
-    unit: string;
-    farmer: {
-      name: string;
-      phone: string;
-    };
-  };
-}
+type Filter = "ALL" | "ACTIVE" | "DELIVERED" | "CANCELLED";
+
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "ALL", label: "All" },
+  { id: "ACTIVE", label: "In progress" },
+  { id: "DELIVERED", label: "Completed" },
+  { id: "CANCELLED", label: "Cancelled" },
+];
 
 export default function ConsumerOrderList() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState<Filter>("ALL");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     fetchOrders();
+    // Keep statuses fresh while the page is open
+    const interval = setInterval(() => fetchOrders(true), 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await apiFetch("/api/orders");
       setOrders(data.orders || []);
       setError("");
     } catch (err: any) {
-      setError(err.message || "Failed to fetch orders");
+      if (!silent) setError(err.message || "Failed to fetch orders");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+
+  const counts = useMemo(() => ({
+    ALL: orders.length,
+    ACTIVE: orders.filter(isActive).length,
+    DELIVERED: orders.filter((o) => o.fulfillmentStatus === "DELIVERED").length,
+    CANCELLED: orders.filter((o) => o.fulfillmentStatus === "CANCELLED").length,
+  }), [orders]);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return orders.filter((o) => {
+      if (filter === "ACTIVE" && !isActive(o)) return false;
+      if (filter === "DELIVERED" && o.fulfillmentStatus !== "DELIVERED") return false;
+      if (filter === "CANCELLED" && o.fulfillmentStatus !== "CANCELLED") return false;
+      if (!q) return true;
+      return o.listing.cropName.toLowerCase().includes(q) || (o.trackingNumber || "").toLowerCase().includes(q);
+    });
+  }, [orders, filter, query]);
 
   if (error) {
     return (
@@ -67,7 +82,7 @@ export default function ConsumerOrderList() {
             <path d="M16 10a4 4 0 0 1-8 0"></path>
           </svg>
         </div>
-        <p className="text-muted mb-4">You haven't placed any orders yet.</p>
+        <p className="text-muted mb-4">You haven&apos;t placed any orders yet.</p>
         <Link href="/listings" className="text-primary hover:text-primary-light font-medium">
           Browse Marketplace
         </Link>
@@ -76,59 +91,96 @@ export default function ConsumerOrderList() {
   }
 
   return (
-    <div className="space-y-6">
-      {orders.map((order) => (
-        <div key={order.id} className="glass-card rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row gap-0 md:gap-6 relative transition-all duration-300">
-          <div className="absolute top-0 left-0 right-0 h-1 md:h-full md:w-1 bg-primary/40" />
-          
-          <div className="w-full md:w-48 h-32 md:h-auto shrink-0 relative bg-primary/5">
-            {getCropImage(order.listing.cropName) ? (
-              <img src={getCropImage(order.listing.cropName)!} alt={order.listing.cropName} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-primary/30 font-bold text-4xl">
-                {order.listing.cropName.charAt(0)}
-              </div>
-            )}
-          </div>
-
-          <div className="p-5 flex-1 flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-lg text-charcoal">{order.listing.cropName}</h3>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                  order.status === 'COMPLETED' ? 'bg-success/10 text-success' :
-                  order.status === 'PENDING' ? 'bg-accent/20 text-accent-dark' :
-                  'bg-muted/10 text-muted'
-                }`}>
-                  {order.status}
-                </span>
-              </div>
-              
-              <div className="text-sm text-charcoal/80 space-y-1 mb-4">
-                <p>Ordered on <span className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</span></p>
-                <p>Quantity: <span className="font-medium">{order.quantity} {order.listing.unit}</span></p>
-                <p>Farmer: <span className="font-medium">{order.listing.farmer.name}</span></p>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-end border-t border-border pt-4">
-              <div>
-                <p className="text-xs text-muted mb-0.5">Total Amount</p>
-                <p className="font-bold text-primary text-xl">₹{order.totalPrice.toFixed(2)}</p>
-              </div>
-              {order.status === 'PENDING' && (
-                <div className="text-xs text-muted flex items-center gap-1">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  Awaiting Pickup
-                </div>
-              )}
-            </div>
-          </div>
+    <div>
+      {/* Filters + search */}
+      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`shrink-0 !px-3.5 !py-1.5 text-xs rounded-full border transition-colors ${filter === f.id ? "bg-primary text-white border-primary" : "bg-white/80 text-muted border-border hover:border-primary/40"}`}
+            >
+              {f.label} <span className="opacity-70">({counts[f.id]})</span>
+            </button>
+          ))}
         </div>
-      ))}
+        <div className="md:ml-auto md:w-64">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search crop or tracking #"
+            aria-label="Search orders"
+          />
+        </div>
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="text-center py-10 glass-card rounded-xl text-sm text-muted">No orders match this filter.</div>
+      ) : (
+        <div className="space-y-5">
+          {visible.map((order) => {
+            const img = getCropImage(order.listing.cropName);
+            const cancelled = order.fulfillmentStatus === "CANCELLED";
+            const delivered = order.fulfillmentStatus === "DELIVERED";
+            return (
+              <Link
+                key={order.id}
+                href={`/orders/${order.id}`}
+                className="block glass-card rounded-xl shadow-sm overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 !text-charcoal"
+              >
+                <div className="flex flex-col sm:flex-row">
+                  <div className="w-full sm:w-36 h-28 sm:h-auto shrink-0 relative bg-primary/5">
+                    {img ? (
+                      <img src={img} alt={order.listing.cropName} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-primary/30 font-bold text-4xl">
+                        {order.listing.cropName.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-5 flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-3 mb-1">
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-lg text-charcoal truncate">{order.listing.cropName}</h3>
+                        <p className="text-xs text-muted">
+                          {order.quantity} {order.listing.unit} · Ordered {formatDate(order.createdAt)}
+                          {order.trackingNumber && <> · <span className="font-mono">#{order.trackingNumber}</span></>}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadgeClass(order.fulfillmentStatus)}`}>
+                        {order.fulfillmentLabel}
+                      </span>
+                    </div>
+
+                    <p className={`text-sm font-semibold mt-3 ${cancelled ? "text-error" : delivered ? "text-success" : "text-primary"}`}>
+                      {etaHeadline(order)}
+                    </p>
+
+                    {!cancelled && (
+                      <div className="mt-2 h-1.5 bg-border rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-700 ${delivered ? "bg-success" : "bg-primary"}`} style={{ width: `${Math.max(progressPercent(order), 6)}%` }} />
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-end mt-4">
+                      <div>
+                        <p className="text-xs text-muted">{order.paymentLabel}</p>
+                        <p className="font-bold text-primary text-lg">₹{(order.totalPrice + (order.deliveryFee || 0)).toFixed(2)}</p>
+                      </div>
+                      <span className="text-xs font-semibold text-primary">
+                        {isActive(order) ? "Track order →" : "View details →"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

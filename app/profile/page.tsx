@@ -7,6 +7,7 @@ import { apiFetch } from "../lib/api";
 import ConsumerOrderList from "../components/ConsumerOrderList";
 import FarmerOrderList from "../components/FarmerOrderList";
 import FarmerListingList from "../components/FarmerListingList";
+import AddressBook from "../components/AddressBook";
 
 export default function ProfilePage() {
   const { user, login } = useAuth(); 
@@ -148,6 +149,7 @@ export default function ProfilePage() {
     
     if (profileData.role === "CONSUMER") {
       tabs.push({ id: "orders", label: "Order History" });
+      tabs.push({ id: "addresses", label: "Saved Addresses" });
     } else if (profileData.role === "FARMER") {
       tabs.push({ id: "listings", label: "My Listings" });
       tabs.push({ id: "orders", label: "Sales History" });
@@ -401,6 +403,10 @@ export default function ProfilePage() {
           <FarmerOrderList />
         )}
         
+        {activeTab === "addresses" && profileData.role === "CONSUMER" && (
+          <AddressBook />
+        )}
+
         {activeTab === "listings" && profileData.role === "FARMER" && (
           <FarmerListingList />
         )}
