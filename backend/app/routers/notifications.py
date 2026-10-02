@@ -25,6 +25,17 @@ def get_notifications(db: Session = Depends(get_db), payload: dict = Depends(get
         print(e)
         return JSONResponse(status_code=500, content={"error": "Failed to fetch notifications"})
 
+@router.patch("/api/notifications/read-all")
+def mark_all_notifications_read(db: Session = Depends(get_db), payload: dict = Depends(get_current_user)):
+    try:
+        db.query(Notification).filter(Notification.userId == payload["userId"], Notification.isRead == False).update({"isRead": True})
+        db.commit()
+        return {"message": "All notifications marked as read"}
+    except Exception as e:
+        print(e)
+        db.rollback()
+        return JSONResponse(status_code=500, content={"error": "Failed to mark notifications as read"})
+
 @router.patch("/api/notifications/{id}/read")
 def mark_notification_read(id: str, db: Session = Depends(get_db), payload: dict = Depends(get_current_user)):
     try:

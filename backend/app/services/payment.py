@@ -57,3 +57,14 @@ def verify_razorpay_signature(order_id: str, payment_id: str, signature: str) ->
     except Exception as e:
         logger.error(f"Error verifying signature: {e}")
         return False
+
+def refund_razorpay_payment(payment_id: str, amount: float) -> bool:
+    """Issue a full refund for a captured payment. Returns True if Razorpay accepted it."""
+    if not client or not payment_id:
+        return False
+    try:
+        client.payment.refund(payment_id, {"amount": int(round(amount * 100))})
+        return True
+    except Exception as e:
+        logger.error(f"Razorpay refund failed: {e}")
+        return False

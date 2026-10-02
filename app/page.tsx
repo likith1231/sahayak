@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "./context/AuthContext";
 import CategoryBrowse from "./components/CategoryBrowse";
+import ActiveOrdersStrip from "./components/ActiveOrdersStrip";
 
 /* ───── Logged-out landing page ───── */
 function LandingPage() {
@@ -258,6 +259,44 @@ function Dashboard({ user }: { user: { id: number; name: string; role: string } 
           </Link>
         )}
 
+        {user.role === "CONSUMER" && (
+          <Link
+            href="/orders"
+            className="group glass-card rounded-xl p-6 hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors shrink-0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-charcoal group-hover:text-primary transition-colors">My Orders</h3>
+                <p className="text-xs text-muted mt-0.5">Track deliveries and past orders</p>
+              </div>
+            </div>
+          </Link>
+        )}
+
+        {user.role === "FARMER" && (
+          <Link
+            href="/farmer/orders"
+            className="group glass-card rounded-xl p-6 hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors shrink-0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-charcoal group-hover:text-primary transition-colors">Orders to Fulfill</h3>
+                <p className="text-xs text-muted mt-0.5">Pack, ship and update delivery status</p>
+              </div>
+            </div>
+          </Link>
+        )}
+
         {user.role === "NGO" && (
           <Link
             href="/ngo/register"
@@ -297,6 +336,8 @@ function Dashboard({ user }: { user: { id: number; name: string; role: string } 
           </Link>
         )}
       </div>
+
+      {user.role === "CONSUMER" && <ActiveOrdersStrip />}
 
       {/* Category Browse */}
       <CategoryBrowse />

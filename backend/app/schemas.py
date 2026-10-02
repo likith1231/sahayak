@@ -116,9 +116,54 @@ class CartResponse(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
+class DeliveryAddressIn(BaseModel):
+    name: str
+    phone: str
+    line1: str
+    line2: Optional[str] = None
+    landmark: Optional[str] = None
+    city: str
+    pincode: str
+
+class AddressCreateReq(DeliveryAddressIn):
+    label: Optional[str] = "Home"
+    isDefault: Optional[bool] = False
+
+class AddressUpdateReq(BaseModel):
+    label: Optional[str] = None
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    line1: Optional[str] = None
+    line2: Optional[str] = None
+    landmark: Optional[str] = None
+    city: Optional[str] = None
+    pincode: Optional[str] = None
+    isDefault: Optional[bool] = None
+
 class CheckoutReq(BaseModel):
     paymentMethod: Optional[str] = "UPI"
     distributionCenterId: Optional[str] = None
+    fulfillmentType: Optional[str] = "PICKUP"
+    addressId: Optional[str] = None
+    address: Optional[DeliveryAddressIn] = None
+    deliveryDate: Optional[str] = None
+    deliverySlot: Optional[str] = None
+    deliveryInstructions: Optional[str] = None
+
+class OrderStatusUpdateReq(BaseModel):
+    status: str
+    note: Optional[str] = None
+    location: Optional[str] = None
+    otp: Optional[str] = None
+    deliveryPartnerName: Optional[str] = None
+    deliveryPartnerPhone: Optional[str] = None
+
+class OrderCancelReq(BaseModel):
+    reason: Optional[str] = None
+
+class OrderRateReq(BaseModel):
+    rating: int
+    review: Optional[str] = None
 
 class RazorpayVerifyReq(BaseModel):
     razorpay_order_id: str

@@ -209,6 +209,21 @@ export default function CartPage() {
               <span className="text-sm text-muted">Subtotal ({items.length} item{items.length > 1 ? "s" : ""})</span>
               <span className="text-lg font-bold text-charcoal">₹{subtotal.toFixed(2)}</span>
             </div>
+            {/* Free-delivery nudge (threshold mirrors backend FREE_DELIVERY_THRESHOLD) */}
+            <div className="mb-4">
+              {subtotal >= 500 ? (
+                <p className="text-xs font-semibold text-success">You&apos;ve unlocked FREE home delivery!</p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted mb-1.5">
+                    Add <strong className="text-charcoal">₹{(500 - subtotal).toFixed(0)}</strong> more for FREE home delivery
+                  </p>
+                  <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${Math.min((subtotal / 500) * 100, 100)}%` }} />
+                  </div>
+                </>
+              )}
+            </div>
             <Link
               href="/checkout"
               className="block w-full bg-primary text-white text-center py-3 rounded-lg font-semibold hover:bg-primary-light transition-colors text-sm"

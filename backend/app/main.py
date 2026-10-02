@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, listings, orders, emergency, ngo, admin, translate, agent, cart, checkout, notifications, mandis
+from app.routers import auth, listings, orders, emergency, ngo, admin, translate, agent, cart, checkout, notifications, mandis, delivery
 from app.services.agmarknet import sync_prices
 from app.services.weather import check_weather_alerts
 from app.database import SessionLocal
@@ -75,6 +75,7 @@ app.include_router(cart.router)
 app.include_router(checkout.router)
 app.include_router(notifications.router)
 app.include_router(mandis.router)
+app.include_router(delivery.router)
 
 @app.get("/")
 def read_root():
