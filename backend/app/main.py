@@ -1,19 +1,32 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, listings, orders, emergency, ngo, admin, translate, agent, cart, checkout, notifications, mandis, delivery
 from app.services.agmarknet import sync_prices
 from app.services.weather import check_weather_alerts
-from app.database import SessionLocal
+from app.database import SessionLocal, engine
+from app.schema_sync import ensure_delivery_schema
+import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import contextlib
 
 
 app = FastAPI(title="Sahayak API")
 
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# Registered before CORSMiddleware so it runs *inside* it: unhandled errors become
+# JSON 500s that still carry CORS headers. Otherwise the browser only sees an
+# opaque "Failed to fetch" and the real error is hidden.
+@app.middleware("http")
+async def catch_unhandled_errors(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception:
+        logging.getLogger("sahayak").exception("Unhandled error on %s %s", request.method, request.url.path)
+        return JSONResponse(status_code=500, content={"error": "Something went wrong on our side. Please try again."})
+
+allowed_origins = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,6 +54,7 @@ scheduler = AsyncIOScheduler()
 
 @app.on_event("startup")
 async def startup_event():
+    ensure_delivery_schema(engine)
     scheduler.add_job(agmarknet_job, "cron", hour=0) # Run daily at midnight
     scheduler.add_job(weather_job, "interval", hours=3) # Run every 3 hours
     scheduler.start()

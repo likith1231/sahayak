@@ -129,7 +129,8 @@ Applied consistently across all pages so cards appear translucent against the 3D
 - **Slots & fees**: 3 daily slots (8–12, 12–4, 4–8 IST), 6h lead time, 5 days ahead (+1 day outside 560xxx). Delivery only to Karnataka pincodes (56–59xxxx). ₹40 fee, free at ₹500+, charged once per checkout on the first order.
 - **Saved addresses**: `Address` model + `/api/addresses` CRUD; managed in Profile → Saved Addresses and inline at checkout.
 - **Pages**: `/orders` (filters, search, ETA + progress), `/orders/[id]` (live tracker polling every 20s, OTP, partner info, history, cancel, rate, reorder, printable invoice), `/farmer/orders` (stats + "Mark as next step" actions). Navbar has a `NotificationBell` for status updates.
-- **Migration**: `a7d3c9e1f2b4` adds the columns/tables idempotently and backfills legacy orders as pickup.
+- **Migration**: `a7d3c9e1f2b4` adds the columns/tables idempotently and backfills legacy orders as pickup. Because Render only runs `uvicorn`, `backend/app/schema_sync.py` applies the same idempotent upgrade on every startup — keep it in sync when adding columns.
+- **Error handling**: `main.py` registers an error-catching middleware *before* `CORSMiddleware` so unhandled exceptions return JSON 500s with CORS headers (otherwise browsers show an opaque "Failed to fetch").
 - **Cart badge**: Navbar shows a cart icon with item count badge for CONSUMER users. Updates via `cart-updated` custom DOM event.
 - **Hero animations**: CSS `@keyframes` in `globals.css` — `hero-float-*` for floating produce icons, `hero-blob` for gradient blobs, `hero-pulse` for subtle opacity animation (retained alongside 3D).
 
